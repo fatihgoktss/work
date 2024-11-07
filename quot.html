@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maliyet Hesaplayıcı</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container my-5">
+    <h1 class="text-center mb-5">Maliyet Hesaplayıcı</h1>
+
+    <!-- Pax ve Kar Oranı Girişleri -->
+    <div class="mb-4">
+        <label for="paxNumber">Pax Sayısı:</label>
+        <input type="number" id="paxNumber" class="form-control" placeholder="Pax Sayısını Girin" value="1">
+        <label for="profitMargin" class="mt-3">Kar Oranı (%):</label>
+        <input type="number" id="profitMargin" class="form-control" placeholder="Kar Oranını Girin" value="15">
+    </div>
+
+    <!-- Değişken Maliyetler Tablosu -->
+    <div class="mb-4">
+        <h3>Değişken Maliyetler</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Maliyet Kalemi</th>
+                    <th>Miktar</th>
+                    <th>Birim Fiyat</th>
+                    <th>Toplam</th>
+                </tr>
+            </thead>
+            <tbody id="variableCosts">
+                <tr>
+                    <td><input type="text" class="form-control" placeholder="Kalem Adı"></td>
+                    <td><input type="number" class="form-control quantity" value="0"></td>
+                    <td><input type="number" class="form-control unit-price" value="0"></td>
+                    <td class="total">0</td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn btn-primary" onclick="addVariableCostRow()">Yeni Satır Ekle</button>
+    </div>
+
+    <!-- Sabit Maliyetler Tablosu -->
+    <div class="mb-4">
+        <h3>Sabit Maliyetler</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Maliyet Kalemi</th>
+                    <th>Tutar</th>
+                </tr>
+            </thead>
+            <tbody id="fixedCosts">
+                <tr>
+                    <td><input type="text" class="form-control" placeholder="Kalem Adı"></td>
+                    <td><input type="number" class="form-control amount" value="0"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn btn-primary" onclick="addFixedCostRow()">Yeni Satır Ekle</button>
+    </div>
+
+    <!-- Sonuç Tablosu -->
+    <div>
+        <h3>Toplam Maliyetler</h3>
+        <table class="table table-bordered">
+            <tr>
+                <th>Değişken Maliyet Toplamı</th>
+                <td id="totalVariableCosts">0</td>
+            </tr>
+            <tr>
+                <th>Sabit Maliyet Toplamı</th>
+                <td id="totalFixedCosts">0</td>
+            </tr>
+            <tr>
+                <th>Pax Başına Sabit Maliyet</th>
+                <td id="fixedCostPerPax">0</td>
+            </tr>
+            <tr>
+                <th>Pax Başına Toplam Maliyet</th>
+                <td id="totalCostPerPax">0</td>
+            </tr>
+            <tr>
+                <th>Karlı Fiyat (Kar Dahil)</th>
+                <td id="profitPrice">0</td>
+            </tr>
+            <tr>
+                <th>SNG Supplement</th>
+                <td id="sngSupplement">0</td>
+            </tr>
+        </table>
+        <button class="btn btn-success" onclick="calculateTotal()">Hesapla</button>
+    </div>
+</div>
+
+<script>
+    function addVariableCostRow() {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="form-control" placeholder="Kalem Adı"></td>
+            <td><input type="number" class="form-control quantity" value="0"></td>
+            <td><input type="number" class="form-control unit-price" value="0"></td>
+            <td class="total">0</td>
+        `;
+        document.getElementById('variableCosts').appendChild(row);
+    }
+
+    function addFixedCostRow() {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="form-control" placeholder="Kalem Adı"></td>
+            <td><input type="number" class="form-control amount" value="0"></td>
+        `;
+        document.getElementById('fixedCosts').appendChild(row);
+    }
+
+    function calculateTotal() {
+        const paxNumber = parseInt(document.getElementById('paxNumber').value) || 1;
+        const profitMargin = parseFloat(document.getElementById('profitMargin').value) || 0;
+
+        // Değişken Maliyet Toplamı Hesapla
+        let totalVariableCosts = 0;
+        document.querySelectorAll('#variableCosts tr').forEach(row => {
+            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+            const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
+            const total = quantity * unitPrice;
+            row.querySelector('.total').innerText = total;
+            totalVariableCosts += total;
+        });
+        document.getElementById('totalVariableCosts').innerText = totalVariableCosts;
+
+        // Sabit Maliyet Toplamı Hesapla
+        let totalFixedCosts = 0;
+        document.querySelectorAll('#fixedCosts .amount').forEach(input => {
+            totalFixedCosts += parseFloat(input.value) || 0;
+        });
+        document.getElementById('totalFixedCosts').innerText = totalFixedCosts;
+
+        // Pax Başına Sabit Maliyet Hesapla
+        const fixedCostPerPax = totalFixedCosts / paxNumber;
+        document.getElementById('fixedCostPerPax').innerText = fixedCostPerPax.toFixed(2);
+
+        // Pax Başına Toplam Maliyet Hesapla
+        const totalCostPerPax = fixedCostPerPax + (totalVariableCosts);
+        document.getElementById('totalCostPerPax').innerText = totalCostPerPax.toFixed(2);
+
+        // Karlı Fiyat Hesapla
+        const profitPrice = totalCostPerPax * (1 + profitMargin / 100);
+        document.getElementById('profitPrice').innerText = profitPrice.toFixed(2);
+
+        // SNG Supplement Hesapla
+        const sngSupplement = profitPrice *70/100;
+        document.getElementById('sngSupplement').innerText = sngSupplement.toFixed(2);
+    }
+</script>
+
+</body>
+</html>
